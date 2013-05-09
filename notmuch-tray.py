@@ -38,10 +38,17 @@ class MailTrayIcon(BaseTrayIcon):
     def __init__(self, config, parent=None):
         icon = self.createIcon('', '10', self.textColor, 7)
         QtGui.QSystemTrayIcon.__init__(self, icon, parent)
+        self.menu = QtGui.QMenu(parent)
+        exitAction = self.menu.addAction("Exit")
+        self.setContextMenu(self.menu)
+        self.connect(exitAction, QtCore.SIGNAL('triggered()'), self.exit)
         self.init_timer()
         self.config = config
         for query in config.options('queries'):
             self.queries[query] = config.get('queries', query)
+
+    def exit(self):
+        sys.exit(0)
 
     def init_timer(self):
         self.timer = QtCore.QTimer(self)

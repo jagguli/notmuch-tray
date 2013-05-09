@@ -1,0 +1,3 @@
+[queries]
+default=tag:unread and tag:me
+Other=tag:INBOX and tag:unread

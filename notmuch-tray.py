@@ -39,14 +39,19 @@ class MailTrayIcon(BaseTrayIcon):
     blink = True
     unread = 0
     queries = {}
+    skip = 0
 
     def __init__(self, config, parent=None):
         icon = self.createIcon('', '10', self.textColor, 7)
         QtGui.QSystemTrayIcon.__init__(self, icon, parent)
         self.menu = QtGui.QMenu(parent)
+        traySignal = "activated(QSystemTrayIcon::ActivationReason)"
+        QtCore.QObject.connect(self, QtCore.SIGNAL(traySignal), self.clear)
         exitAction = self.menu.addAction("Exit")
         self.setContextMenu(self.menu)
         self.connect(exitAction, QtCore.SIGNAL('triggered()'), self.exit)
+        clearAction = self.menu.addAction("Clear")
+        self.connect(clearAction, QtCore.SIGNAL('triggered()'), self.clear)
         self.init_timer()
         self.config = config
         for query in config.options('queries'):
@@ -54,6 +59,11 @@ class MailTrayIcon(BaseTrayIcon):
 
     def exit(self):
         sys.exit(0)
+
+    def clear(self):
+        self.blink = False
+        self.skip += self.unread
+        self.unread = 0
 
     def init_timer(self):
         self.timer = QtCore.QTimer(self)
@@ -83,6 +93,9 @@ class MailTrayIcon(BaseTrayIcon):
         for name, query in self.queries.iteritems():
             if name == 'default':
                 self.unread = self.get_mail_unread(query.split())
+                if not self.unread:
+                    self.skip = 0
+                self.unread -= self.skip
             mailboxes.append(
                 "%s: %s "
                 % (name, self.get_mail_unread(query.split())))
